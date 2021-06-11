@@ -22,14 +22,14 @@ class MySQLDialect {
             constraints: [],
             indexes: []
           }
-          return client.find(`DESCRIBE ${this._quote(table)}`)
+          return client.find(`SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? and TABLE_NAME = ?`, [client.database, table])
             .then((columns) => {
               t.columns = columns.map((column) => ({
-                name: column.Field,
-                nullable: column.Null === 'YES',
-                default_value: column.Default,
-                type: column.Type,
-                extra: column.Extra
+                name: column['COLUMN_NAME'],
+                nullable: column['IS_NULLABLE'] === 'YES',
+                default_value: column['COLUMN_DEFAULT'],
+                type: `${column['DATA_TYPE']}${column['CHARACTER_MAXIMUM_LENGTH'] ? `(${column['CHARACTER_MAXIMUM_LENGTH']})` : ''}`,
+                extra: column['EXTRA']
               }))
               return t
             })
